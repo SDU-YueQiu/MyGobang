@@ -7,6 +7,7 @@
 #include<Windows.h>
 #include"json.hpp"
 #include<fstream>
+#include<ctime>
 
 struct mapnode
 {
@@ -34,6 +35,8 @@ void choosemode();
 void choosehard(int type);
 void tapto(int type);
 mapnode findmap(int x, int y);
+mapnode findmapxy(int x, int y);
+int checkmap(int x, int y);
 
 int datamap[20][20] = { 0 };
 int pplayer1, pplayer2, eplayer1, eplayer2;
@@ -129,7 +132,7 @@ int choose()
 	while (1)
 	{
 		ExMessage msg = getmessage();
-		if (msg.message == WM_LBUTTONDOWN)
+		if (msg.message == WM_LBUTTONDOWN)//°×ÆåÊÇ1 ºÚç÷ÊÇ2
 		{
 			if (msg.x >= 168 - 78.5 && msg.x <= 168 + 78.5 && msg.y >= 418 - 78.5 && msg.y <= 418 + 78.5)
 			{
@@ -206,12 +209,13 @@ void choosehard(int type)
 
 void gotomain(int type)
 {
+	memset(datamap, 0, sizeof(datamap));
 	if (type == 0)
 	{
 		IMAGE bkimg;
 		loadimage(&bkimg, L"./imgs/main pvpve.png", 768, 1024);
 		putimage(0, 0, &bkimg);
-		
+
 		status["sum"] = status["sum"] + 1;
 		int thistimenum = status["sum"];
 		save[thistimenum]["type"] = 0;
@@ -219,11 +223,63 @@ void gotomain(int type)
 		save[thistimenum]["player2"] = pplayer2;
 		save[thistimenum]["stepcnt"] = 0;
 		save[thistimenum]["steps"] = {};
-		
 		vector<int> steps;
-		
+		time_t cotime = time(0);
+		tm notime;
+		localtime_s(&notime, &cotime);
+		time_t pre = time(0);
+		time_t now = time(0);
+		int noplayer = 2;
+		setfillcolor(BLACK);
+		fillcircle(310 + 73, 838 + 73, 73);
 
-		
+		while (1)
+		{
+			steps.push_back(noplayer);
+			pre = now;
+			now = time(0);
+			steps.push_back(floor(difftime(now, pre)));
+
+			ExMessage msg = getmessage(EX_MOUSE);
+			if (msg.message != WM_LBUTTONDOWN) continue;
+			else
+			{
+				mapnode numnode = findmap(msg.x, msg.y);
+				mapnode xynode = findmapxy(msg.x, msg.y);
+				if (numnode.x == -1 || numnode.y == -1) continue;
+				steps.push_back(numnode.x);
+				steps.push_back(numnode.y);
+				save[thistimenum]["stepcnt"] = save[thistimenum]["stepcnt"] + 1;
+
+				if (datamap[numnode.x][numnode.y] != 0) continue;
+				datamap[numnode.x][numnode.y] = noplayer;
+
+				if (noplayer == 1)
+				{
+					setfillcolor(WHITE);
+					fillcircle(xynode.x, xynode.y, chessradius);
+					noplayer = 2;
+					setfillcolor(BLACK);
+					fillcircle(310 + 73, 838 + 73, 73);
+				}
+				else
+				{
+					setfillcolor(BLACK);
+					fillcircle(xynode.x, xynode.y, chessradius);
+					noplayer = 1;
+					setfillcolor(WHITE);
+					fillcircle(310 + 73, 838 + 73, 73);
+				}
+
+				int winner = checkmap(numnode.x, numnode.y);
+				if (winner != 0)
+				{
+
+				}
+				else
+					continue;
+			}
+		}
 	}
 	return;
 }
@@ -234,5 +290,58 @@ void gotomain(bool ishistory, int type)
 
 mapnode findmap(int x, int y)
 {
-	
+	mapnode ans;
+	ans.x = -1;
+	ans.x = -1;
+	for (int i = 0; i < 15; ++i)
+	{
+		for (int j = 0; j < 15; ++j)
+		{
+			if (x >= zero.x - chessradius + i * chessradius * 2 && x <= zero.x - chessradius + (i + 1) * chessradius * 2 && y > zero.y - chessradius + j * chessradius * 2 && y < zero.y - chessradius + (j + 1) * chessradius * 2)
+			{
+				ans.x = i;
+				ans.y = j;
+				return ans;
+			}
+		}
+	}
+	return ans;
+}
+mapnode findmapxy(int x, int y)
+{
+	mapnode ans;
+	ans.x = -1;
+	ans.x = -1;
+	for (int i = 0; i < 15; ++i)
+	{
+		for (int j = 0; j < 15; ++j)
+		{
+			if (x >= zero.x - chessradius + i * chessradius * 2 && x <= zero.x - chessradius + (i + 1) * chessradius * 2 && y > zero.y - chessradius + j * chessradius * 2 && y < zero.y - chessradius + (j + 1) * chessradius * 2)
+			{
+				ans.x = zero.x + i * chessradius * 2;
+				ans.y = zero.y + j * chessradius * 2;
+				return ans;
+			}
+		}
+	}
+	return ans;
+}
+
+int checkmap(int x, int y)
+{
+	int noplayer = datamap[x][y];
+	int turnx[8] = { -1,1,0,0,-1,1,-1,1 };
+	int turny[8] = { 0,0,1,-1,-1,1,1,-1 };
+
+	for (int i = 0; i < 8; ++i)
+	{
+		int tx = x + turnx[i];
+		int ty = y + turny[i];
+		while (tx >= 0 && ty >= 0 && datamap[tx][ty] == datamap[x][y])
+		{
+
+		}
+	}
+
+	return 0;
 }
