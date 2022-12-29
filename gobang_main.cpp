@@ -8,6 +8,7 @@
 #include"json.hpp"
 #include<fstream>
 #include<ctime>
+#include<string>
 
 struct mapnode
 {
@@ -48,11 +49,11 @@ json save[100];
 
 int main()
 {
+	initgraph(windows_width, windows_height);
 	while (1)
 	{
 		init();
 		choosemode();
-		cin.get();
 	}
 	//结束
 	return 0;
@@ -74,7 +75,15 @@ void init()
 	pplayer1 = pplayer2 = eplayer1 = eplayer2 = 0;
 	nomode = -1;
 
-	initgraph(windows_width, windows_height);
+	LOGFONT f;
+	gettextstyle(&f);
+	f.lfHeight = 72;
+	_tcscpy_s(f.lfFaceName, _T("黑体"));
+	f.lfQuality = ANTIALIASED_QUALITY;
+	settextstyle(&f);
+	settextcolor(BLACK);
+
+	cleardevice();
 	setbkcolor(WHITE);
 	cleardevice();
 	IMAGE bkimg;
@@ -114,13 +123,6 @@ int choose()
 {
 	cleardevice();
 	// 设置输出效果为抗锯齿
-	LOGFONT f;
-	gettextstyle(&f);
-	f.lfHeight = 72;
-	_tcscpy_s(f.lfFaceName, _T("黑体"));
-	f.lfQuality = ANTIALIASED_QUALITY;
-	settextstyle(&f);
-	settextcolor(BLACK);
 
 	setlinecolor(BLACK);
 	circle(168, 418, 78.5);
@@ -212,10 +214,12 @@ void gotomain(int type)
 	memset(datamap, 0, sizeof(datamap));
 	if (type == 0)
 	{
+		//初始化gui
 		IMAGE bkimg;
 		loadimage(&bkimg, L"./imgs/main pvpve.png", 768, 1024);
 		putimage(0, 0, &bkimg);
 
+		//json初始化
 		status["sum"] = status["sum"] + 1;
 		int thistimenum = status["sum"];
 		save[thistimenum]["type"] = 0;
@@ -225,35 +229,55 @@ void gotomain(int type)
 		save[thistimenum]["steps"] = {};
 		vector<int> steps;
 		time_t cotime = time(0);
-		tm notime;
-		localtime_s(&notime, &cotime);
 		time_t pre = time(0);
 		time_t now = time(0);
 		int noplayer = 2;
 		setfillcolor(BLACK);
 		fillcircle(310 + 73, 838 + 73, 73);
+		save[thistimenum]["starttime"] = cotime;
 
+
+		
+		//开始下棋
 		while (1)
 		{
-			steps.push_back(noplayer);
-			pre = now;
-			now = time(0);
-			steps.push_back(floor(difftime(now, pre)));
-
+			//鼠标控制下棋点
 			ExMessage msg = getmessage(EX_MOUSE);
 			if (msg.message != WM_LBUTTONDOWN) continue;
 			else
 			{
+				//得到落子点
 				mapnode numnode = findmap(msg.x, msg.y);
 				mapnode xynode = findmapxy(msg.x, msg.y);
 				if (numnode.x == -1 || numnode.y == -1) continue;
-				steps.push_back(numnode.x);
-				steps.push_back(numnode.y);
-				save[thistimenum]["stepcnt"] = save[thistimenum]["stepcnt"] + 1;
-
 				if (datamap[numnode.x][numnode.y] != 0) continue;
 				datamap[numnode.x][numnode.y] = noplayer;
 
+				//存档
+				steps.push_back(noplayer);
+				pre = now;
+				now = time(0);
+				steps.push_back(floor(difftime(now, pre)));
+				steps.push_back(numnode.x);
+				steps.push_back(numnode.y);
+				save[thistimenum]["stepcnt"] = save[thistimenum]["stepcnt"] + 1;
+				
+				//更新时间
+				clearrectangle(512+10, 911+5, 512 + 233-15, 911 + 60-10);
+				int dif = floor(difftime(now, cotime));
+				LOGFONT f;
+				gettextstyle(&f);
+				f.lfHeight = 48;
+				_tcscpy_s(f.lfFaceName, _T("黑体"));
+				f.lfQuality = ANTIALIASED_QUALITY;
+				settextstyle(&f);
+				settextcolor(BLACK);
+				TCHAR s[5];
+				swprintf_s(s, _T("%d"), dif);
+				outtextxy(512+20, 911+8, s);
+
+
+				//画图
 				if (noplayer == 1)
 				{
 					setfillcolor(WHITE);
@@ -271,10 +295,35 @@ void gotomain(int type)
 					fillcircle(310 + 73, 838 + 73, 73);
 				}
 
+				//判断胜负
 				int winner = checkmap(numnode.x, numnode.y);
 				if (winner != 0)
 				{
+					//画图
+					cleardevice();
+					if (winner == 1)
+					{
+						outtextxy(168, 149, _T("白棋获胜！"));
+					}
+					else
+						outtextxy(168, 149, _T("黑棋获胜！"));
+					
+					//保存存档
+					save[thistimenum]["steps"] = steps;
+					string name = "./saves/对局";
+					int sum = status["sum"];
+					name += to_string(sum);
+					name += ".json";
+					fout.open(name);
+					fout << save[thistimenum];
+					fout.close();
+					fout.open("./saves/status.json");
+					fout << status;
+					fout.close();
+					Sleep(1000);
+					save[thistimenum]["endtime"] = time(0);
 
+					return;
 				}
 				else
 					continue;
@@ -328,19 +377,29 @@ mapnode findmapxy(int x, int y)
 }
 
 int checkmap(int x, int y)
-{
+ {
 	int noplayer = datamap[x][y];
-	int turnx[8] = { -1,1,0,0,-1,1,-1,1 };
-	int turny[8] = { 0,0,1,-1,-1,1,1,-1 };
+	int turnx[4] = { 1,0,1,1 };
+	int turny[4] = { 0,1,1,-1 };
 
-	for (int i = 0; i < 8; ++i)
+	for (int i = 0; i < 4; ++i)
 	{
-		int tx = x + turnx[i];
-		int ty = y + turny[i];
-		while (tx >= 0 && ty >= 0 && datamap[tx][ty] == datamap[x][y])
+		int tx = x;
+		int ty = y;
+		
+		while (tx + turnx[i] >= 0 && ty + turny[i] >= 0 && datamap[tx + turnx[i]][ty + turny[i]] == noplayer)
 		{
-
+			tx += turnx[i];
+			ty += turny[i];
 		}
+		int cnt = 1;
+		while (tx - turnx[i] >= 0 && ty - turny[i] >= 0 && datamap[tx - turnx[i]][ty - turny[i]] == noplayer)
+		{
+			tx -= turnx[i];
+			ty -= turny[i];
+			++cnt;
+		}
+		if (cnt >= 5) return noplayer;
 	}
 
 	return 0;
