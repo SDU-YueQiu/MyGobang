@@ -15,6 +15,15 @@ struct mapnode
 	int x;
 	int y;
 };
+struct treenode
+{
+	//vector<treenode*> childs;
+	int val;
+	mapnode pos;
+	int player;
+	int max;
+	int min;
+};
 
 const mapnode zero = { 32,32 };
 const int windows_width = 768;
@@ -38,10 +47,12 @@ void tapto(int type);
 mapnode findmap(int x, int y);
 mapnode findmapxy(int x, int y);
 int checkmap(int x, int y);
+long long evaluate(int player);
+long long evaluatexy(int x, int y, int player);
 
 int datamap[20][20] = { 0 };
 int pplayer1, pplayer2, eplayer1, eplayer2;
-int nomode = -1;
+int ehard1, ehard2;
 ofstream fout;
 ifstream fin;
 json status;
@@ -73,7 +84,6 @@ void init()
 		}
 	}
 	pplayer1 = pplayer2 = eplayer1 = eplayer2 = 0;
-	nomode = -1;
 
 	LOGFONT f;
 	gettextstyle(&f);
@@ -104,6 +114,9 @@ void tapto(int type)
 	else if (type == 1)
 	{
 		choosehard(1);
+		pplayer1 = choose();
+		eplayer1 = pplayer1 == 1 ? 2 : 1;
+		gotomain(1);
 		return;
 	}
 	else if (type == 2)
@@ -206,6 +219,30 @@ void choosemode()
 
 void choosehard(int type)
 {
+	if (type == 1)
+	{
+		//画图
+		IMAGE bkimg;
+		loadimage(&bkimg, L"./imgs/choosen.png", 768, 1024);
+		putimage(0, 0, &bkimg);
+		
+		//选择难度
+		while (1)
+		{
+			ExMessage msg = getmessage();
+			if (msg.message == WM_LBUTTONDOWN)
+			{
+				for (int i = 0; i < 4; ++i)
+				{
+					if(msg.x>=384&&msg.x<=384+102&&msg.y>=615+99*i&&msg.y<=615+99*i+72)
+					{
+						ehard1 = status["hards"][i];
+						return;
+					}
+				}
+			}
+		}
+	}
 	return;
 }
 
@@ -236,8 +273,6 @@ void gotomain(int type)
 		fillcircle(310 + 73, 838 + 73, 73);
 		save[thistimenum]["starttime"] = cotime;
 
-
-		
 		//开始下棋
 		while (1)
 		{
@@ -330,6 +365,130 @@ void gotomain(int type)
 			}
 		}
 	}
+	else if (type == 1)
+	{
+		cleardevice();
+		//初始化gui
+		IMAGE bkimg;
+		loadimage(&bkimg, L"./imgs/main pvpve.png", 768, 1024);
+		putimage(0, 0, &bkimg);
+
+		//json初始化
+		status["sum"] = status["sum"] + 1;
+		int thistimenum = status["sum"];
+		save[thistimenum]["type"] = 0;
+		save[thistimenum]["player1"] = pplayer1;
+		save[thistimenum]["player2"] = pplayer2;
+		save[thistimenum]["stepcnt"] = 0;
+		save[thistimenum]["steps"] = {};
+		vector<int> steps;
+		time_t cotime = time(0);
+		time_t pre = time(0);
+		time_t now = time(0);
+		int noplayer = 2;
+		setfillcolor(BLACK);
+		fillcircle(310 + 73, 838 + 73, 73);
+		save[thistimenum]["starttime"] = cotime;
+
+		//开始下棋
+		if (noplayer == pplayer1)
+		{
+			while (1)
+			{
+				//鼠标控制下棋点
+				ExMessage msg = getmessage(EX_MOUSE);
+				if (msg.message != WM_LBUTTONDOWN) continue;
+				else
+				{
+					//得到落子点
+					mapnode numnode = findmap(msg.x, msg.y);
+					mapnode xynode = findmapxy(msg.x, msg.y);
+					if (numnode.x == -1 || numnode.y == -1) continue;
+					if (datamap[numnode.x][numnode.y] != 0) continue;
+					datamap[numnode.x][numnode.y] = noplayer;
+
+					//存档
+					steps.push_back(noplayer);
+					pre = now;
+					now = time(0);
+					steps.push_back(floor(difftime(now, pre)));
+					steps.push_back(numnode.x);
+					steps.push_back(numnode.y);
+					save[thistimenum]["stepcnt"] = save[thistimenum]["stepcnt"] + 1;
+
+					//更新时间
+					clearrectangle(512 + 10, 911 + 5, 512 + 233 - 15, 911 + 60 - 10);
+					int dif = floor(difftime(now, cotime));
+					LOGFONT f;
+					gettextstyle(&f);
+					f.lfHeight = 48;
+					_tcscpy_s(f.lfFaceName, _T("黑体"));
+					f.lfQuality = ANTIALIASED_QUALITY;
+					settextstyle(&f);
+					settextcolor(BLACK);
+					TCHAR s[5];
+					swprintf_s(s, _T("%d"), dif);
+					outtextxy(512 + 20, 911 + 8, s);
+
+
+					//画图
+					if (noplayer == 1)
+					{
+						setfillcolor(WHITE);
+						fillcircle(xynode.x, xynode.y, chessradius);
+						noplayer = 2;
+						setfillcolor(BLACK);
+						fillcircle(310 + 73, 838 + 73, 73);
+					}
+					else
+					{
+						setfillcolor(BLACK);
+						fillcircle(xynode.x, xynode.y, chessradius);
+						noplayer = 1;
+						setfillcolor(WHITE);
+						fillcircle(310 + 73, 838 + 73, 73);
+					}
+
+					//判断胜负
+					int winner = checkmap(numnode.x, numnode.y);
+					if (winner != 0)
+					{
+						//画图
+						cleardevice();
+						if (winner == 1)
+						{
+							outtextxy(168, 149, _T("白棋获胜！"));
+						}
+						else
+							outtextxy(168, 149, _T("黑棋获胜！"));
+
+						//保存存档
+						save[thistimenum]["steps"] = steps;
+						string name = "./saves/对局";
+						int sum = status["sum"];
+						name += to_string(sum);
+						name += ".json";
+						fout.open(name);
+						fout << save[thistimenum];
+						fout.close();
+						fout.open("./saves/status.json");
+						fout << status;
+						fout.close();
+						Sleep(1000);
+						save[thistimenum]["endtime"] = time(0);
+
+						return;
+					}
+					else
+						break;
+				}
+			}
+		}
+		else
+		{
+			//aigo
+
+		}
 	return;
 }
 void gotomain(bool ishistory, int type)
