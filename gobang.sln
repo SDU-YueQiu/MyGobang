@@ -5,6 +5,8 @@ VisualStudioVersion = 17.4.33205.214
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gobang", "gobang.vcxproj", "{61653C36-B78D-4534-876C-B226D72FBBE9}"
 EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "gobang_setup", "..\gobang_setup\gobang_setup.vdproj", "{2A5AC9D8-31D7-41F9-868F-D645BF4FEF0A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -21,6 +23,10 @@ Global
 		{61653C36-B78D-4534-876C-B226D72FBBE9}.Release|x64.Build.0 = Release|x64
 		{61653C36-B78D-4534-876C-B226D72FBBE9}.Release|x86.ActiveCfg = Release|Win32
 		{61653C36-B78D-4534-876C-B226D72FBBE9}.Release|x86.Build.0 = Release|Win32
+		{2A5AC9D8-31D7-41F9-868F-D645BF4FEF0A}.Debug|x64.ActiveCfg = Debug
+		{2A5AC9D8-31D7-41F9-868F-D645BF4FEF0A}.Debug|x86.ActiveCfg = Debug
+		{2A5AC9D8-31D7-41F9-868F-D645BF4FEF0A}.Release|x64.ActiveCfg = Release
+		{2A5AC9D8-31D7-41F9-868F-D645BF4FEF0A}.Release|x86.ActiveCfg = Release
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
