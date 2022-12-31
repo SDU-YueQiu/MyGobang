@@ -10,10 +10,12 @@
 #include<ctime>
 #include<string>
 #include<vector>
+#include<algorithm>
 
 using namespace std;
 using namespace nlohmann;
 typedef long long ll;
+const int INF = 0x7f7f7f7f;
 
 struct mapnode
 {
@@ -26,14 +28,8 @@ typedef struct treenode
 	int x;
 	int y;
 	int player;
-	int alpha;
-	int beta;
-
-	bool operator < (const treenode& a) const
-	{
-		return val > a.val;
-	}
-
+	long long alpha;
+	long long beta;
 	vector<treenode*>child;
 };
 
@@ -522,11 +518,14 @@ void gotomain(int type)
 				rootnode->val = 0;
 				rootnode->x = -1;
 				rootnode->y = -1;
+				rootnode->alpha = -INF;
+				rootnode->beta = INF;
 				alphabeta(rootnode, 0);
+
 				mapnode numnode;
 				numnode.x = rootnode->x;
 				numnode.y = rootnode->y;
-				delete rootnode;
+				//delete rootnode;
 				mapnode xynode;
 				xynode.x = zero.x + numnode.x * chessradius * 2;
 				xynode.y = zero.y + numnode.y * chessradius * 2;
@@ -722,6 +721,7 @@ long long evaluate(int player)
 					}
 					if (tx + turnx[ti] >= 0 && ty + turny[ti] >= 0 && datamap[tx + turnx[ti]][ty + turny[ti]] == otherplayer)
 						ishuoright = false;
+					if (tx == 0 || ty == 0) ishuoright = false;
 
 					int cnt = 1;
 					while (tx - turnx[ti] >= 0 && ty - turny[ti] >= 0 && datamap[tx - turnx[ti]][ty - turny[ti]] == player)
@@ -731,6 +731,7 @@ long long evaluate(int player)
 						checkmap[ti][tx][ty] = 1;
 						++cnt;
 					}
+					if (tx == 0 || ty == 0) ishuoleft = false;
 					if (tx - turnx[ti] >= 0 && ty - turny[ti] >= 0 && datamap[tx - turnx[ti]][ty - turny[ti]] == otherplayer)
 						ishuoleft = false;
 					int ishuo = ishuoleft && ishuoright;
@@ -763,6 +764,7 @@ long long evaluate(int player)
 					}
 					if (tx + turnx[ti] >= 0 && ty + turny[ti] >= 0 && datamap[tx + turnx[ti]][ty + turny[ti]] == player)
 						ishuoright = false;
+					if (tx == 0 || ty == 0) ishuoright = false;
 
 					int cnt = 1;
 					while (tx - turnx[ti] >= 0 && ty - turny[ti] >= 0 && datamap[tx - turnx[ti]][ty - turny[ti]] == otherplayer)
@@ -772,6 +774,7 @@ long long evaluate(int player)
 						checkmap[ti][tx][ty] = 1;
 						++cnt;
 					}
+					if (tx == 0 || ty == 0) ishuoleft = false;
 					if (tx - turnx[ti] >= 0 && ty - turny[ti] >= 0 && datamap[tx - turnx[ti]][ty - turny[ti]] == player)
 						ishuoleft = false;
 					int ishuo = ishuoleft && ishuoright;
@@ -869,7 +872,7 @@ long long evaluatexy_defend(int x, int y, int player)
 			++cnt;
 		}
 		ishuo = ishuo ? 20 : 1;
-		if (cnt == 4) ans += 1000000 * ishuo;
+		if (cnt == 4) ans += 100000000 * ishuo;
 		else if (cnt == 3) ans += 10000 * ishuo;
 		else if (cnt == 2) ans += 100 * ishuo;
 		else if (cnt == 1) ans += 1 * ishuo;
@@ -905,7 +908,22 @@ void alphabeta(treenode* root, int depth)
 	}
 
 	//只保留前八个子节点
-	sort(root->child.begin(), root->child.end());
+	if (root->child.size() == 0) return;
+	for (int timecnt = 0; timecnt < nodenum; ++timecnt)
+	{
+		long long tmax = root->child[timecnt]->val;
+		int imax = timecnt;
+		for (int i = timecnt; i < root->child.size(); ++i)
+		{
+			if (root->child[i]->val > tmax)
+			{
+				tmax = root->child[i]->val;
+				imax = i;
+			}
+		}
+		swap(root->child[timecnt], root->child[imax]);
+	}
+
 	for (int i = root->child.size() - 1; i >= nodenum; --i)
 	{
 		delete root->child[i];
