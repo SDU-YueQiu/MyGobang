@@ -735,10 +735,10 @@ long long evaluate(int player)
 					if (tx - turnx[ti] >= 0 && ty - turny[ti] >= 0 && datamap[tx - turnx[ti]][ty - turny[ti]] == otherplayer)
 						ishuoleft = false;
 					int ishuo = ishuoleft && ishuoright;
-					ishuo = ishuo ? 10 : 1;
+					ishuo = ishuo ? 100 : 1;
 
-					if (cnt == 5) score_player += 1000000;
-					else if (cnt == 4) score_player += 1000 * ishuo;
+					if (cnt == 5) score_player += 100000000;
+					else if (cnt == 4) score_player += 10000 * ishuo;
 					else if (cnt == 3) score_player += 100 * ishuo;
 					else if (cnt == 2) score_player += 10 * ishuo;
 					else if (cnt == 1) score_player += 1 * ishuo;
@@ -778,11 +778,11 @@ long long evaluate(int player)
 					if (tx - turnx[ti] >= 0 && ty - turny[ti] >= 0 && datamap[tx - turnx[ti]][ty - turny[ti]] == player)
 						ishuoleft = false;
 					int ishuo = ishuoleft && ishuoright;
-					ishuo = ishuo ? 10 : 1;
+					ishuo = ishuo ? 199 : 1;
 
 					if (cnt == 5) score_opponent += 1000000;
-					else if (cnt == 4) score_opponent += 1000 * ishuo;
-					else if (cnt == 3) score_opponent += 100 * ishuo;
+					else if (cnt == 4) score_opponent += 10000 * ishuo;
+					else if (cnt == 3) score_opponent += 1000 * ishuo;
 					else if (cnt == 2) score_opponent += 10 * ishuo;
 					else if (cnt == 1) score_opponent += 1 * ishuo;
 				}
@@ -871,10 +871,10 @@ long long evaluatexy_defend(int x, int y, int player)
 			ty -= turny[i];
 			++cnt;
 		}
-		ishuo = ishuo ? 20 : 1;
-		if (cnt == 4) ans += 100000000 * ishuo;
+		ishuo = ishuo ? 99 : 1;
+		if (cnt == 4) ans += 10000000 * ishuo;
 		else if (cnt == 3) ans += 10000 * ishuo;
-		else if (cnt == 2) ans += 100 * ishuo;
+		else if (cnt == 2) ans += 1 * ishuo;
 		else if (cnt == 1) ans += 1 * ishuo;
 	}
 	datamap[x][y] = 0;
