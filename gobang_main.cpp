@@ -42,7 +42,7 @@ const int chessradius = 25;
 
 void init();
 void gotomain(int type);
-void gotomain(bool ishistory, int type);
+void gotomain(bool ishistory, int savenum);
 int choose();
 void history();
 void choosemode();
@@ -86,6 +86,16 @@ void init()
 	fin.open("./saves/status.json");
 	fin >> status;
 	fin.close();
+
+	for (int i = 1; i <= status["sum"]; ++i)
+	{
+		string name = "./saves/对局";
+		name += to_string(i);
+		name += ".json";
+		fin.open(name);
+		fin >> save[i];
+		fin.close();
+	}
 
 	for (int i = 0; i <= 15; ++i)
 	{
@@ -133,7 +143,10 @@ void tapto(int type)
 	}
 	else if (type == 2)
 	{
-		choosehard(2);
+		eplayer1 = 1;
+		eplayer2 = 2;
+		ehard1 = status["hards"][0];
+		gotomain(2);
 		return;
 	}
 	else if (type == 3)
@@ -178,6 +191,120 @@ int choose()
 
 void history()
 {
+	cleardevice();
+	IMAGE bkimg;
+	loadimage(&bkimg, L"./imgs/his.png", 768, 1024);
+	putimage(0, 0, &bkimg);
+
+	int page = 0;
+	int savesum = status["sum"];
+	int difheight = 188;
+	for (int i = 1 + page * 5; i <= 5 + page * 5 && i <= savesum; ++i)
+	{
+		LOGFONT f;
+		gettextstyle(&f);
+		f.lfHeight = 48;
+		_tcscpy_s(f.lfFaceName, _T("黑体"));
+		f.lfQuality = ANTIALIASED_QUALITY;
+		settextstyle(&f);
+		settextcolor(BLACK);
+
+		TCHAR s[20];
+		swprintf_s(s, _T("对局%d"), i);
+		outtextxy(49, 24 + (i - 1) * difheight, s);
+		TCHAR mytypename[3][20] = { L"pvp",L"pve",L"eve" };
+		int mytype = save[i]["type"];
+		outtextxy(393, 24 + (i - 1) * difheight, mytypename[mytype]);
+		int starttime = save[i]["starttime"];
+		int endtime = save[i]["endtime"];
+		int dif = endtime - starttime;
+		swprintf_s(s, _T("用时：%ds"), dif);
+		outtextxy(44, 106 + (i - 1) * difheight, s);
+		int stepcnt = save[i]["stepcnt"];
+		swprintf_s(s, _T("步数：%d"), stepcnt);
+		outtextxy(393, 109 + (i - 1) * difheight, s);
+	}
+
+	while (1)
+	{
+		ExMessage msg = getmessage();
+		if (msg.message != WM_LBUTTONDOWN) continue;
+		//上一页
+		if (msg.x >= 0 && msg.x <= 215 && msg.y >= 940 && msg.y <= 940 + 84)
+		{
+			page--;
+			if (page < 0) page = 0;
+			cleardevice();
+			putimage(0, 0, &bkimg);
+			for (int i = 1 + page * 5; i <= 5 + page * 5 && i <= savesum; ++i)
+			{
+				LOGFONT f;
+				gettextstyle(&f);
+				f.lfHeight = 48;
+				_tcscpy_s(f.lfFaceName, _T("黑体"));
+				f.lfQuality = ANTIALIASED_QUALITY;
+				settextstyle(&f);
+				settextcolor(BLACK);
+
+				TCHAR s[20];
+				swprintf_s(s, _T("对局%d"), i);
+				outtextxy(49, 24 + (i - 1 - page * 5) * difheight, s);
+				TCHAR mytypename[3][20] = { L"pvp",L"pve",L"eve" };
+				int mytype = save[i]["type"];
+				outtextxy(393, 24 + (i - 1 - page * 5) * difheight, mytypename[mytype]);
+				int starttime = save[i]["starttime"];
+				int endtime = save[i]["endtime"];
+				int dif = endtime - starttime;
+				swprintf_s(s, _T("用时：%ds"), dif);
+				outtextxy(44, 106 + (i - 1 - page * 5) * difheight, s);
+				int stepcnt = save[i]["stepcnt"];
+				swprintf_s(s, _T("步数：%d"), stepcnt);
+				outtextxy(393, 109 + (i - 1 - page * 5) * difheight, s);
+			}
+		}
+		else if (msg.x >= 553 && msg.x <= 553 + 215 && msg.y >= 940 && msg.y <= 940 + 84)
+		{
+			page++;
+			cleardevice();
+			putimage(0, 0, &bkimg);
+			for (int i = 1 + page * 5; i <= 5 + page * 5 && i <= savesum; ++i)
+			{
+				LOGFONT f;
+				gettextstyle(&f);
+				f.lfHeight = 48;
+				_tcscpy_s(f.lfFaceName, _T("黑体"));
+				f.lfQuality = ANTIALIASED_QUALITY;
+				settextstyle(&f);
+				settextcolor(BLACK);
+
+				TCHAR s[20];
+				swprintf_s(s, _T("对局%d"), i);
+				outtextxy(49, 24 + (i - 1 - page * 5) * difheight, s);
+				TCHAR mytypename[3][20] = { L"pvp",L"pve",L"eve" };
+				int mytype = save[i]["type"];
+				outtextxy(393, 24 + (i - 1 - page * 5) * difheight, mytypename[mytype]);
+				int starttime = save[i]["starttime"];
+				int endtime = save[i]["endtime"];
+				int dif = endtime - starttime;
+				swprintf_s(s, _T("用时：%ds"), dif);
+				outtextxy(44, 106 + (i - 1 - page * 5) * difheight, s);
+				int stepcnt = save[i]["stepcnt"];
+				swprintf_s(s, _T("步数：%d"), stepcnt);
+				outtextxy(393, 109 + (i - 1 - page * 5) * difheight, s);
+			}
+		}
+		else
+		{
+			for (int i = 1 + page * 5; i <= 5 + page * 5 && i <= savesum; ++i)
+			{
+				if (msg.y >= 0 + (i - page * 5 - 1) * 188 && msg.y <= 188 + (i - page * 5 - 1) * 188)
+				{
+					gotomain(true, i);
+					return;
+				}
+			}
+		}
+	}
 	return;
 }
 
@@ -349,6 +476,7 @@ void gotomain(int type)
 				int winner = checkmap(numnode.x, numnode.y);
 				if (winner != 0)
 				{
+					Sleep(1000);
 					//画图
 					cleardevice();
 					if (winner == 1)
@@ -360,6 +488,8 @@ void gotomain(int type)
 
 					//保存存档
 					save[thistimenum]["steps"] = steps;
+					cotime = time(0);
+					save[thistimenum]["endtime"] = cotime;
 					string name = "./saves/对局";
 					int sum = status["sum"];
 					name += to_string(sum);
@@ -391,9 +521,9 @@ void gotomain(int type)
 		//json初始化
 		status["sum"] = status["sum"] + 1;
 		int thistimenum = status["sum"];
-		save[thistimenum]["type"] = 0;
+		save[thistimenum]["type"] = 1;
 		save[thistimenum]["player1"] = pplayer1;
-		save[thistimenum]["player2"] = pplayer2;
+		save[thistimenum]["player2"] = eplayer1;
 		save[thistimenum]["stepcnt"] = 0;
 		save[thistimenum]["steps"] = {};
 		vector<int> steps;
@@ -476,6 +606,7 @@ void gotomain(int type)
 						int winner = checkmap(numnode.x, numnode.y);
 						if (winner != 0)
 						{
+							Sleep(1000);
 							//画图
 							cleardevice();
 							if (winner == 1)
@@ -487,6 +618,8 @@ void gotomain(int type)
 
 							//保存存档
 							save[thistimenum]["steps"] = steps;
+							cotime = time(0);
+							save[thistimenum]["endtime"] = cotime;
 							string name = "./saves/对局";
 							int sum = status["sum"];
 							name += to_string(sum);
@@ -582,6 +715,7 @@ void gotomain(int type)
 				int winner = checkmap(numnode.x, numnode.y);
 				if (winner != 0)
 				{
+					Sleep(1000);
 					//画图
 					cleardevice();
 					if (winner == 1)
@@ -592,6 +726,145 @@ void gotomain(int type)
 						outtextxy(168, 149, _T("黑棋获胜！"));
 
 					//保存存档
+					cotime = time(0);
+					save[thistimenum]["endtime"] = cotime;
+					save[thistimenum]["steps"] = steps;
+					string name = "./saves/对局";
+					int sum = status["sum"];
+					name += to_string(sum);
+					name += ".json";
+					fout.open(name);
+					fout << save[thistimenum];
+					fout.close();
+					fout.open("./saves/status.json");
+					fout << status;
+					fout.close();
+					Sleep(1000);
+					save[thistimenum]["endtime"] = time(0);
+
+					return;
+				}
+			}
+		}
+	}
+	else if (type == 2)
+	{
+		cleardevice();
+		//初始化gui
+		IMAGE bkimg;
+		loadimage(&bkimg, L"./imgs/main eve his.png", 768, 1024);
+		putimage(0, 0, &bkimg);
+
+		//json初始化
+		status["sum"] = status["sum"] + 1;
+		int thistimenum = status["sum"];
+		save[thistimenum]["type"] = 2;
+		save[thistimenum]["player1"] = eplayer1;
+		save[thistimenum]["player2"] = eplayer2;
+		save[thistimenum]["stepcnt"] = 0;
+		save[thistimenum]["steps"] = {};
+		vector<int> steps;
+		time_t cotime = time(0);
+		time_t pre = time(0);
+		time_t now = time(0);
+		int noplayer = 2;
+		setfillcolor(BLACK);
+		fillcircle(310 + 73, 838 + 73, 73);
+		save[thistimenum]["starttime"] = cotime;
+
+		LOGFONT f;
+		gettextstyle(&f);
+		f.lfHeight = 48;
+		_tcscpy_s(f.lfFaceName, _T("黑体"));
+		f.lfQuality = ANTIALIASED_QUALITY;
+		settextstyle(&f);
+		settextcolor(BLACK);
+
+		aiman = eplayer1;
+		tureman = eplayer2;
+
+		//开始下棋
+		while (1)
+		{
+			ExMessage msg = getmessage();
+			if (msg.message != WM_LBUTTONDOWN) continue;
+			if (msg.x >= 512 && msg.x <= 512 + 233 && msg.y >= 881 && msg.y <= 881 + 60)
+			{
+				//得到落子点
+				aiman = noplayer;
+				tureman = aiman == 1 ? 2 : 1;
+				rootnode = new treenode;
+				rootnode->player = noplayer;
+				rootnode->val = 0;
+				rootnode->x = -1;
+				rootnode->y = -1;
+				rootnode->alpha = -INF;
+				rootnode->beta = INF;
+				alphabeta(rootnode, 0);
+
+				mapnode numnode;
+				numnode.x = rootnode->x;
+				numnode.y = rootnode->y;
+				//delete rootnode;
+				mapnode xynode;
+				xynode.x = zero.x + numnode.x * chessradius * 2;
+				xynode.y = zero.y + numnode.y * chessradius * 2;
+				if (numnode.x == -1 || numnode.y == -1) continue;
+				if (datamap[numnode.x][numnode.y] != 0) continue;
+
+				//存档
+				steps.push_back(noplayer);
+				pre = now;
+				now = time(0);
+				steps.push_back(floor(difftime(now, pre)));
+				steps.push_back(numnode.x);
+				steps.push_back(numnode.y);
+				save[thistimenum]["stepcnt"] = save[thistimenum]["stepcnt"] + 1;
+
+				//更新时间
+				int dif = floor(difftime(now, cotime));
+				TCHAR s[20];
+				datamap[numnode.x][numnode.y] = noplayer;
+				swprintf_s(s, _T("%lld"), evaluate(noplayer));
+				clearrectangle(45, 838 + 145, 45 + 519, 838 + 145 + 41);
+				outtextxy(45, 838 + 145, s);
+
+
+				//画图
+				if (noplayer == 1)
+				{
+					setfillcolor(WHITE);
+					fillcircle(xynode.x, xynode.y, chessradius);
+					noplayer = 2;
+					setfillcolor(BLACK);
+					fillcircle(310 + 73, 838 + 73, 73);
+				}
+				else
+				{
+					setfillcolor(BLACK);
+					fillcircle(xynode.x, xynode.y, chessradius);
+					noplayer = 1;
+					setfillcolor(WHITE);
+					fillcircle(310 + 73, 838 + 73, 73);
+				}
+
+				//判断胜负
+				int winner = checkmap(numnode.x, numnode.y);
+				if (winner != 0)
+				{
+					Sleep(1000);
+					//画图
+					cleardevice();
+					if (winner == 1)
+					{
+						outtextxy(168, 149, _T("白棋获胜！"));
+					}
+					else
+						outtextxy(168, 149, _T("黑棋获胜！"));
+
+					//保存存档
+					cotime = time(0);
+					save[thistimenum]["endtime"] = cotime;
 					save[thistimenum]["steps"] = steps;
 					string name = "./saves/对局";
 					int sum = status["sum"];
@@ -613,8 +886,72 @@ void gotomain(int type)
 	}
 	return;
 }
-void gotomain(bool ishistory, int type)
+void gotomain(bool ishistory, int savenum)
 {
+	int type = save[savenum]["type"];
+
+	IMAGE bkimg;
+	loadimage(&bkimg, L"./imgs/main eve his.png", 768, 1024);
+	putimage(0, 0, &bkimg);
+
+	int stepcnt = save[savenum]["stepcnt"];
+	mapnode tmpbuf, xynode;
+	int dif;
+	int noplayer;
+
+	setfillcolor(BLACK);
+	fillcircle(310 + 73, 838 + 73, 73);
+
+	for (int i = 0; i < stepcnt; ++i)
+	{
+		noplayer = save[savenum]["steps"][i * 4 + 0];
+		dif = save[savenum]["steps"][i * 4 + 1];
+		tmpbuf.x = save[savenum]["steps"][i * 4 + 2];
+		tmpbuf.y = save[savenum]["steps"][i * 4 + 3];
+		xynode.x = zero.x + tmpbuf.x * chessradius * 2;
+		xynode.y = zero.y + tmpbuf.y * chessradius * 2;
+
+		while (1)
+		{
+			ExMessage msg = getmessage();
+			if (msg.message != WM_LBUTTONDOWN) continue;
+			else if (msg.x >= 512 && msg.x <= 512 + 233 && msg.y >= 881 && msg.y <= 881 + 60)
+			{
+				if (noplayer == 1)
+				{
+					setfillcolor(WHITE);
+					fillcircle(xynode.x, xynode.y, chessradius);
+					noplayer = 2;
+					setfillcolor(BLACK);
+					fillcircle(310 + 73, 838 + 73, 73);
+				}
+				else
+				{
+					setfillcolor(BLACK);
+					fillcircle(xynode.x, xynode.y, chessradius);
+					noplayer = 1;
+					setfillcolor(WHITE);
+					fillcircle(310 + 73, 838 + 73, 73);
+				}
+			}
+			break;
+		}
+	}
+	int winner = noplayer;
+	if (winner != 0)
+	{
+		//画图
+		Sleep(1000);
+		cleardevice();
+		if (winner == 1)
+		{
+			outtextxy(168, 149, _T("白棋获胜！"));
+		}
+		else
+			outtextxy(168, 149, _T("黑棋获胜！"));
+
+		Sleep(1000);
+	}
 	return;
 }
 
