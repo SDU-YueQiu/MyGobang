@@ -476,6 +476,7 @@ void gotomain(int type)
 				int winner = checkmap(numnode.x, numnode.y);
 				if (winner != 0)
 				{
+					save[thistimenum]["winner"] = winner;
 					Sleep(1000);
 					//»­Í¼
 					cleardevice();
@@ -606,6 +607,7 @@ void gotomain(int type)
 						int winner = checkmap(numnode.x, numnode.y);
 						if (winner != 0)
 						{
+							save[thistimenum]["winner"] = winner;
 							Sleep(1000);
 							//»­Í¼
 							cleardevice();
@@ -715,6 +717,7 @@ void gotomain(int type)
 				int winner = checkmap(numnode.x, numnode.y);
 				if (winner != 0)
 				{
+					save[thistimenum]["winner"] = winner;
 					Sleep(1000);
 					//»­Í¼
 					cleardevice();
@@ -852,6 +855,7 @@ void gotomain(int type)
 				int winner = checkmap(numnode.x, numnode.y);
 				if (winner != 0)
 				{
+					save[thistimenum]["winner"] = winner;
 					Sleep(1000);
 					//»­Í¼
 					cleardevice();
@@ -937,7 +941,7 @@ void gotomain(bool ishistory, int savenum)
 			break;
 		}
 	}
-	int winner = noplayer;
+	int winner = save[savenum]["winner"];
 	if (winner != 0)
 	{
 		//»­Í¼
