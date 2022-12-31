@@ -324,7 +324,7 @@ void gotomain(int type)
 
 				datamap[numnode.x][numnode.y] = noplayer;
 				swprintf_s(s, _T("%lld"), evaluate(noplayer));
-				clearrectangle(45, 838 + 145, 45 + 219, 838 + 145 + 41);
+				clearrectangle(45, 838 + 145, 45 + 519, 838 + 145 + 41);
 				outtextxy(45, 838 + 145, s);
 
 				//画图
@@ -450,7 +450,7 @@ void gotomain(int type)
 						outtextxy(512 + 20, 911 + 8, s);
 						datamap[numnode.x][numnode.y] = noplayer;
 						swprintf_s(s, _T("%lld"), evaluate(noplayer));
-						clearrectangle(45, 838 + 145, 45 + 219, 838 + 145 + 41);
+						clearrectangle(45, 838 + 145, 45 + 519, 838 + 145 + 41);
 						outtextxy(45, 838 + 145, s);
 
 
@@ -556,7 +556,7 @@ void gotomain(int type)
 				outtextxy(512 + 20, 911 + 8, s);
 				datamap[numnode.x][numnode.y] = noplayer;
 				swprintf_s(s, _T("%lld"), evaluate(noplayer));
-				clearrectangle(45, 838 + 145, 45 + 219, 838 + 145 + 41);
+				clearrectangle(45, 838 + 145, 45 + 519, 838 + 145 + 41);
 				outtextxy(45, 838 + 145, s);
 
 
@@ -736,12 +736,14 @@ long long evaluate(int player)
 						ishuoleft = false;
 					int ishuo = ishuoleft && ishuoright;
 					ishuo = ishuo ? 100 : 1;
+					int issi = (!ishuoleft) && (!ishuoright);
+					issi = !issi;
 
-					if (cnt == 5) score_player += 100000000;
-					else if (cnt == 4) score_player += 10000 * ishuo;
-					else if (cnt == 3) score_player += 100 * ishuo;
-					else if (cnt == 2) score_player += 10 * ishuo;
-					else if (cnt == 1) score_player += 1 * ishuo;
+					if (cnt == 5) score_player += 1000000000;
+					else if (cnt == 4) score_player += 100000 * ishuo * issi;
+					else if (cnt == 3) score_player += 100 * ishuo * issi;
+					else if (cnt == 2) score_player += 10 * ishuo * issi;
+					else if (cnt == 1) score_player += 1 * ishuo * issi;
 				}
 			}
 			if (datamap[i][j] == otherplayer)
@@ -779,12 +781,14 @@ long long evaluate(int player)
 						ishuoleft = false;
 					int ishuo = ishuoleft && ishuoright;
 					ishuo = ishuo ? 199 : 1;
+					int issi = (!ishuoleft) && (!ishuoright);
+					issi = !issi;
 
-					if (cnt == 5) score_opponent += 1000000;
-					else if (cnt == 4) score_opponent += 10000 * ishuo;
-					else if (cnt == 3) score_opponent += 1000 * ishuo;
-					else if (cnt == 2) score_opponent += 10 * ishuo;
-					else if (cnt == 1) score_opponent += 1 * ishuo;
+					if (cnt == 5) score_opponent += 1000000000;
+					else if (cnt == 4) score_opponent += 10000000 * ishuo * issi;
+					else if (cnt == 3) score_opponent += 1000 * ishuo * issi;
+					else if (cnt == 2) score_opponent += 10 * ishuo * issi;
+					else if (cnt == 1) score_opponent += 1 * ishuo * issi;
 				}
 			}
 		}
@@ -828,12 +832,14 @@ long long evaluatexy(int x, int y, int player)
 			ishuoleft = false;
 		int ishuo = ishuoleft && ishuoright;
 		ishuo = ishuo ? 10 : 1;
+		int issi = (!ishuoleft) && (!ishuoright);
+		issi = !issi;
 
 		if (cnt == 5) ans += 100000000;
-		else if (cnt == 4) ans += 100000 * ishuo;
-		else if (cnt == 3) ans += 10000 * ishuo;
-		else if (cnt == 2) ans += 1000 * ishuo;
-		else if (cnt == 1) ans += 10 * ishuo;
+		else if (cnt == 4) ans += 10000 * ishuo * issi;
+		else if (cnt == 3) ans += 1000 * ishuo * issi;
+		else if (cnt == 2) ans += 100 * ishuo * issi;
+		else if (cnt == 1) ans += 10 * ishuo * issi;
 	}
 
 	//位置加分
@@ -871,9 +877,9 @@ long long evaluatexy_defend(int x, int y, int player)
 			ty -= turny[i];
 			++cnt;
 		}
-		ishuo = ishuo ? 99 : 1;
-		if (cnt == 4) ans += 10000000 * ishuo;
-		else if (cnt == 3) ans += 10000 * ishuo;
+		ishuo = ishuo ? 100 : 1;
+		if (cnt == 4) ans += 10000 * ishuo;
+		else if (cnt == 3) ans += 1000 * ishuo;
 		else if (cnt == 2) ans += 1 * ishuo;
 		else if (cnt == 1) ans += 1 * ishuo;
 	}
@@ -907,7 +913,7 @@ void alphabeta(treenode* root, int depth)
 		}
 	}
 
-	//只保留前八个子节点
+	//只保留前nodenum个子节点
 	if (root->child.size() == 0) return;
 	for (int timecnt = 0; timecnt < nodenum; ++timecnt)
 	{
@@ -928,6 +934,10 @@ void alphabeta(treenode* root, int depth)
 	{
 		delete root->child[i];
 		root->child.pop_back();
+	}
+	for (int i = 0; i < root->child.size(); ++i)
+	{
+		root->child[i]->val = -INF;
 	}
 
 	//遍历子节点
@@ -950,7 +960,8 @@ void alphabeta(treenode* root, int depth)
 			{
 				if (depth == 0)
 				{
-					root->x = root->child[i]->x, root->y = root->child[i]->y;
+					root->x = root->child[i]->x;
+					root->y = root->child[i]->y;
 				}
 				root->alpha = root->child[i]->val;
 				root->val = root->child[i]->val;
